@@ -1,0 +1,9 @@
+{% extends 'layouts/main.html' %}
+{% block content %}
+  <h1>Sorry ...</h1>
+  {% if error_msg %}
+  <p>{{ error_msg }}</p>
+  {% else %}
+  <p>There's nothing here!</p>
+  {% endif %}
+{% endblock %}

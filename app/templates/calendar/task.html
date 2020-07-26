@@ -1,0 +1,351 @@
+{% extends 'layouts/form.html' %}
+{% block title %}
+{% if editing %}
+    Edit Task
+{% else %}
+    New Task
+{% endif %}
+{% endblock %}
+{% block content %}
+<div id="task-details-form" class="app-margin">
+{% if editing %}
+<form autocomplete="off" method="POST" action="/calendar/{{ calendar_id }}/task/{{ task["id"] }}">
+{% else %}
+<form autocomplete="off" method="POST" action="/calendar/{{ calendar_id }}/new_task">
+{% endif %}
+    {{ form.hidden_tag() }}
+    <div class="form-group row">
+        <label for="title" class="col-sm-2 col-form-label">Title</label>
+        <div class="col-sm-10">
+            {{ form.title(class_ = 'form-control', placeholder='Title', autofocus = true) }}
+            {% if False %}
+            <!--<input class="form-control" type="text" autocomplete="off" tabindex="0" placeholder="Title" value="{{ task["title"] }}"
+                id="title" name="title" minlength="2" required />-->
+            {% endif %}
+        </div>
+    </div>
+  
+    <div class="form-group row">
+        <div class="col">
+            <label for="is_all_day">All day event</label>
+            <input type="checkbox" id="is_all_day" name="is_all_day" value="1" {% if task["is_all_day"] %}checked="checked"{% endif %}/>
+        </div>
+        <div class="col">
+            <label class="sr-only" for="start_date_picker">Start date</label>
+            <input class="form-control" id="start_date_picker" type="date" value="{{ task["start_time"].strftime("%Y-%m-%d") }}">
+            <label class="sr-only" for="start_date">Start date</label>
+            <input class="form-control" type="hidden" id="start_date" name="start_date" value="{{ task["start_time"].strftime("%Y-%m-%d") }}" />
+        </div>
+        <div id="start_time_block" {% if task["is_all_day"] %}class="sr-only"{% else %}class="col"{% endif %}>
+            <label class="sr-only" for="start_time">Start time</label>
+            <input class="form-control" type="time" id="start_time" name="start_time" value="{{ task["start_time"].strftime("%H:%M") }}" />
+        </div>
+        <div class="col"><p>to</p></div>
+        <div class="col">
+            <label class="sr-only" for="end_date_picker">End date</label>
+            <input class="form-control" id="end_date_picker" type="date" value="{{ task["end_time"].strftime("%Y-%m-%d") }}">
+            <label class="sr-only" for="end_date">End date</label>
+            <input class="form-control" type="hidden" id="end_date" name="end_date" value="{{ task["end_time"].strftime("%Y-%m-%d") }}" />
+        </div>
+        <div id="end_time_block" {% if task["is_all_day"] %}class="sr-only"{% else %}class="col"{% endif %}>
+            <label class="sr-only" for="end_time">End time</label>
+            <input class="form-control" type="time" id="end_time" name="end_time" value="{{ task["end_time"].strftime("%H:%M") }}" />
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col">
+            <label for="repeats">Recurrent</label>
+            <input type="checkbox" id="repeats" name="repeats" value="1" {% if task["is_recurrent"] %}checked="checked"{% endif %}/>
+        </div>
+    </div>
+
+    <div id="repetition_block" {% if not task["is_recurrent"] %}class="sr-only"{% else %}class="form-group row"{% endif %}>
+        <div class="col">
+            <label class="mr-3">
+                <input type="radio" class="mr-1" id="type_weekly" name="repetition_type" value="w"
+                    {% if task["repetition_type"] == "w" %}
+                        checked="checked"
+                    {% endif %}
+                >Occurs Weekly
+            </label>
+            <label class="mr-3">
+                <input type="radio" class="mr-1" id="type_monthly" name="repetition_type" value="m"
+                    {% if task["repetition_type"] == "m" %}
+                        checked="checked"
+                    {% endif %}
+                >Occurs Monthly
+            </label>
+        </div>
+        <div class="col">
+            <label class="mr-3">
+                <input type="radio" class="mr-1" id="subtype_weekly" name="repetition_subtype" value="w"
+                    {% if task["repetition_subtype"] == "w" %}
+                        checked="checked"
+                    {% endif %}
+                >Week day
+            </label>
+            <select class="form-control" name="repetition_value_weekday" id="repetition_value_weekday"
+                {% if task["repetition_subtype"] == "m" %}
+                    disabled="disabled"
+                {% endif %}
+                >
+                <option value="0">Monday</option>
+                <option value="1">Tuesday</option>
+                <option value="2">Wednesday</option>
+                <option value="3">Thursday</option>
+                <option value="4">Friday</option>
+                <option value="5">Saturday</option>
+                <option value="6">Sunday</option>
+            </select>
+        </div>
+        <div class="col">
+            <label class="mr-3">
+                <input type="radio" class="mr-1" id="subtype_monthly" name="repetition_subtype" value="m"
+                    {% if task["repetition_subtype"] == "m" %}
+                        checked="checked"
+                    {% else %}
+                        disabled="disabled"
+                    {% endif %}
+                >Month day
+            </label>
+            <select class="form-control" name="repetition_value_monthday" id="repetition_value_monthday"
+                {% if task["repetition_subtype"] == "w" %}
+                    disabled="disabled"
+                {% endif %}
+                >
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+                <option value="11">11</option>
+                <option value="12">12</option>
+                <option value="13">13</option>
+                <option value="14">14</option>
+                <option value="15">15</option>
+                <option value="16">16</option>
+                <option value="17">17</option>
+                <option value="18">18</option>
+                <option value="19">19</option>
+                <option value="20">20</option>
+                <option value="21">21</option>
+                <option value="22">22</option>
+                <option value="23">23</option>
+                <option value="24">24</option>
+                <option value="25">25</option>
+                <option value="26">26</option>
+                <option value="27">27</option>
+                <option value="28">28</option>
+                <option value="29">29</option>
+                <option value="30">30</option>
+                <option value="31">31</option>
+            </select>
+            <input type="hidden" min="0" max="31" id="repetition_value" name="repetition_value" value="0"/>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label for="details" class="col-sm-2 col-form-label">Details</label><br/>
+        <div class="col-sm-10">
+            <textarea class="form-control" id="details" name="details" placeholder="Details" autocomplete="off"
+            >{{ task["details"]|replace("<br>","\n") }}</textarea>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label for="color" class="col-sm-2 col-form-label">Color</label>
+        <div class="col-sm-1">
+            <input class="btn-block color-picker" type="color" value="{{ task["color"] }}" id="color_custom"/>
+        </div>
+        <div class="col">
+            {% for color, label in buttons_colors %}
+            <input class="form-button color" style="color:{{ color }}" data-color="{{ color }}" type="button" value="{{ label }}"/>
+            {% endfor %}
+        </div>
+    </div>
+    <input type="hidden" value="{{ task["color"] }}" id="color" name="color"/>
+
+    {% if emojis_enabled %}
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label">Emojis</label>
+        <div class="col">
+            {% for emoji in buttons_emojis %}
+            <input class="form-button emoji" type="button" value="{{ emoji }}" />
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <input class="btn btn-primary" type="submit" value="Save" />
+    <input class="btn btn-primary" id="delete-task" type="button" value="Delete" />
+    <input class="btn btn-primary" type="button" value="Cancel" onclick="window.history.go(-1); return false;" />
+</form>
+</div>
+
+<script type="text/javascript">
+    var csrf_token = "{{ csrf_token() }}";
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", csrf_token);
+            }
+        }
+    });
+
+    const editing = {% if editing %}true{% else %}false{% endif %};
+    const currentRepetitionValue = {{ task.get("repetition_value", 0) }};
+    const repetitionType = "{{ task["repetition_type"] }}";
+    const repetitionSubtype = "{{ task["repetition_type"] }}";
+    document.getElementById("delete-task").disabled = false;
+    if (editing === true) {
+        document.getElementById("repetition_value").value = currentRepetitionValue;
+        if (repetitionSubtype === "m") {
+            document.getElementById("repetition_value_monthday").selectedIndex = currentRepetitionValue - 1;
+        }
+        if (repetitionSubtype === "w") {
+            // week days are 0-index
+            document.getElementById("repetition_value_weekday").selectedIndex = currentRepetitionValue;
+        }
+    } else {
+        document.getElementById("delete-task").disabled = true;
+    }
+
+    select_repetition_value_weekday = function(resetRepetitionValue = false) {
+        document.getElementById("repetition_value_weekday").disabled = false;
+        document.getElementById("repetition_value_monthday").disabled = true;
+        document.getElementById("repetition_value_weekday").selectedIndex = 0;
+        // first weekday
+        document.getElementById("repetition_value").value = 0;
+    };
+
+    select_repetition_value_monthday = function() {
+        document.getElementById("repetition_value_weekday").disabled = true;
+        document.getElementById("repetition_value_monthday").disabled = false;
+        document.getElementById("repetition_value_monthday").selectedIndex = 0;
+        // first day of the month
+        document.getElementById("repetition_value").value = 1;
+    };
+
+    select_type_weekly = function() {
+        select_repetition_value_weekday();
+        document.getElementById("subtype_monthly").disabled = true;
+        document.getElementById("subtype_weekly").disabled = false;
+    };
+
+    window.onload = function() {
+        document.getElementById("is_all_day").onclick = function(eventData) {
+            if (eventData.target.checked === true) {
+                document.getElementById("start_time_block").className = "sr-only";
+                document.getElementById("end_time_block").className = "sr-only";
+                document.getElementById("start_time").value ="00:00";
+                document.getElementById("end_time").value ="00:00";
+            } else {
+                document.getElementById("start_time_block").className = "col";
+                document.getElementById("end_time_block").className = "col";
+            }
+        };
+
+        document.getElementById("start_time").onchange = function(eventData) {
+            document.getElementById("end_time").value = eventData.target.value;
+        }
+
+        document.getElementById("repeats").onclick = function(eventData) {
+            if (eventData.target.checked === true) {
+                document.getElementById("type_weekly").checked = true;
+                document.getElementById("subtype_weekly").checked = true;
+                document.getElementById("repetition_block").className = "form-group row";
+                select_type_weekly();
+            } else {
+                document.getElementById("repetition_block").className = "sr-only";
+                // hide everything
+                document.getElementById("repetition_value_weekday").disabled = false;
+                document.getElementById("repetition_value_monthday").disabled = true;
+                // and set defaults
+                document.getElementById("type_weekly").checked = true;
+                document.getElementById("subtype_weekly").checked = true;
+            }
+        };
+
+        document.getElementById("type_weekly").onclick = function(eventData) {
+            select_type_weekly();
+            document.getElementById("subtype_weekly").checked = true;
+        };
+
+        document.getElementById("type_monthly").onclick = function(eventData) {
+            document.getElementById("subtype_monthly").disabled = false;
+        };
+
+        document.getElementById("subtype_weekly").onclick = function(eventData) {
+            select_repetition_value_weekday();
+        };
+
+        document.getElementById("subtype_monthly").onclick = function(eventData) {
+            select_repetition_value_monthday();
+        };
+
+        document.getElementById("repetition_value_weekday").onchange = function(eventData) {
+            document.getElementById("repetition_value").value =
+                eventData.target.options[eventData.target.selectedIndex].value;
+        };
+
+        document.getElementById("repetition_value_monthday").onchange = function(eventData) {
+            document.getElementById("repetition_value").value =
+                eventData.target.options[eventData.target.selectedIndex].value;
+        };
+
+        document.getElementById("start_date_picker").onchange = function(eventData) {
+            document.getElementById("start_date").value = eventData.target.value;
+        };
+
+        document.getElementById("end_date_picker").onchange = function(eventData) {
+            document.getElementById("end_date").value = eventData.target.value;
+        };
+
+        document.getElementById("color_custom").onchange = function(eventData) {
+            document.getElementById("color").value = eventData.target.value;
+        };
+
+        document.getElementById("task-details-form").onclick = function(eventData) {
+            if (eventData.target.nodeName === "INPUT") {
+                switch (eventData.target.className) {
+                    case "form-button color":
+                        document.getElementById("color").value = eventData.target.getAttribute("data-color");
+                        document.getElementById("color_custom").value = eventData.target.getAttribute("data-color");
+                        return false;
+                        break;
+                    case "form-button emoji":
+                        let titleTextbox = document.getElementById("title");
+                        titleTextbox.value = eventData.target.value + " " + titleTextbox.value;
+                        break;
+                    default:
+                        return;
+                }
+            }
+            return;
+        };
+
+        {% if editing %}
+        document.getElementById("delete-task").onclick = function() {
+            if (confirm("Remove task '" + document.getElementById("title").value +  "'?") === true) {
+                $.ajax({
+                    url: "/calendar/{{ calendar_id }}/task/" + {{ task["id"] }},
+                    type: "DELETE",
+                    success: (result) => {
+                        window.location = "/calendar/{{ calendar_id }}/?y={{ year }}&m={{ month }}";
+                    },
+                    error: (error) => {
+                        SetErrorStatusbar();
+                    }
+                })
+            }
+        };
+        {% endif %};
+    }
+</script>
+{% endblock %}
