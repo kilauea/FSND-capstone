@@ -19,7 +19,7 @@
 
     <div class="header">
         <input type="button" class="header-button" value="+"
-            onclick="window.location='/calendar/{{ calendar_id }}/{{ year }}/{{ month}}/new_task'" title="New task" />
+            onclick="window.location='/calendar/{{ calendar_id }}/{{ year }}/{{ month}}/tasks'" title="New task" />
         <input type="button" class="header-button" value="&lt;" onclick="window.location='{{ previous_month_link }}'"
             title="Previous month" />
         <input type="button" class="header-button" value="&gt;" onclick="window.location='{{ next_month_link }}'"
@@ -102,7 +102,7 @@
                                             class="button smaller hide-recurrent-task"
                                             title="Hide this task ocurrence">H</a>
                                         {% endif %}
-                                        <a href="/calendar/{{ calendar_id }}/{{ day.year }}/{{ day.month }}/{{ day.day }}/{{ task["id"] }}{% if task["is_recurrent"] %}?repeats=1{% endif %}"
+                                        <a href="/calendar/{{ calendar_id }}/tasks/{{ task["id"] }}?year={{ day.year }}&month={{ day.month }}"
                                             class="button smaller edit-task"
                                             title="Edit task">E</a>
                                     {% endif %}
@@ -157,7 +157,7 @@
         if (confirm("Remove task '" + title + "'?") == true) {
             ShowStatusbar();
             $.ajax({
-                url: "/calendar/{{ calendar_id }}/task/" + id,
+                url: "/calendar/{{ calendar_id }}/tasks/" + id,
                 type: "DELETE",
                 success: (result) => {
                     location.reload();
@@ -249,7 +249,7 @@
                         editTaskButton.href = urlFragments.join("/");
                         ShowStatusbar();
                         $.ajax({
-                            url: "/calendar/{{ calendar_id }}/task/" + movingElement.getAttribute("data-id"),
+                            url: "/calendar/{{ calendar_id }}/tasks/" + movingElement.getAttribute("data-id"),
                             type: "PATCH",
                             dataType: 'json',
                             contentType: 'application/json',
@@ -331,7 +331,7 @@
                 } else {
                     clearTimeout(clicksTimeout);
                     clicksCounter = 0;
-                    window.location = "/calendar/{{ calendar_id }}/{{ year }}/{{ month }}/new_task?day=" +
+                    window.location = "/calendar/{{ calendar_id }}/tasks??year={{ year }}&month={{ month }}&day=" +
                                        eventData.target.getAttribute("data-day");
                 }
                 return;

@@ -8,6 +8,7 @@ class TaskForm(FlaskForm):
     #start = datetime.now()
     #end = start + timedelta(hours=8)
 
+    task_id = HiddenField('task_id')
     calendar_id = HiddenField('calendar_id')
     user_id = HiddenField('user_id')
     title = StringField('Title', validators=[DataRequired(), Length(max=128)], render_kw={'autofocus': True})

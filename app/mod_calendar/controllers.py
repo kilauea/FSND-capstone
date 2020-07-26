@@ -82,14 +82,16 @@ def show_calendar(calendar_id):
         weekdays_headers=weekdays_headers
     )
 
-@mod_calendar.route('/<int:calendar_id>/<int:year>/<int:month>/new_task', methods=['GET'])
-def new_task(calendar_id, year, month):
+@mod_calendar.route('/<int:calendar_id>/tasks', methods=['GET'])
+def new_task_form(calendar_id):
     calendar_query = Calendar.query.get(calendar_id)
     if calendar_query is None:
         return not_found_error('Calendar %s not found' % calendar_id)
 
     Calendar.set_first_weekday(calendar_query.week_starting_day)
 
+    year = int(request.args.get("year", datetime.now().year))
+    month = int(request.args.get("month", datetime.now().month))
     current_day, current_month, current_year = Calendar.current_date()
     year = max(min(year, calendar_query.max_year), calendar_query.min_year)
     month = max(min(month, 12), 1)
@@ -118,6 +120,7 @@ def new_task(calendar_id, year, month):
     )
 
     taskForm = TaskForm()
+    taskForm.task_id.default = 0
     taskForm.calendar_id.default = calendar_id
     taskForm.user_id.default = 1
     taskForm.title.default = ''
@@ -132,6 +135,7 @@ def new_task(calendar_id, year, month):
     taskForm.repetition_value.default = 0
     taskForm.repetition_type.default = ''
     taskForm.repetition_subtype.default = ''
+    taskForm.process()
 
     return render_template(
         "calendar/task.html",
@@ -143,15 +147,14 @@ def new_task(calendar_id, year, month):
         max_year=calendar_query.max_year,
         month_names=Calendar.month_names(),
         task=vars(task),
-        editing=False,
         emojis_enabled=calendar_query.emojis_enabled,
         button_default_color_value=current_app.config["BUTTON_CUSTOM_COLOR_VALUE"],
         buttons_colors=current_app.config["BUTTONS_COLORS_LIST"],
         buttons_emojis=current_app.config["BUTTONS_EMOJIS_LIST"] if calendar_query.emojis_enabled else tuple(),
     )
 
-@mod_calendar.route('/<int:calendar_id>/new_task', methods=['POST'])
-def save_task(calendar_id):
+@mod_calendar.route('/<int:calendar_id>/tasks', methods=['POST'])
+def create_task(calendar_id):
     title = request.form["title"].strip()
     start_date = request.form.get("start_date", "")
     end_date = request.form.get("end_date", "")
@@ -191,13 +194,12 @@ def save_task(calendar_id):
     else:
         return redirect("/calendar/%s" % (calendar_id), code=302)
 
-@mod_calendar.route('/<int:calendar_id>/<int:year>/<int:month>/<int:day>/<int:task_id>', methods=['GET'])
-def edit_task(calendar_id, year, month, day, task_id):
+@mod_calendar.route('/<int:calendar_id>/tasks/<int:task_id>', methods=['GET'])
+def edit_task(calendar_id, task_id):
     calendar_query = Calendar.query.get(calendar_id)
     if calendar_query is None:
         return not_found_error('Calendar %s not found' % calendar_id)
 
-    repeats = request.args.get("repeats") == "1"
     task = Task.getTask(task_id)
     if task == None:
         return not_found_error('Task %s not found' % task_id)
@@ -206,6 +208,7 @@ def edit_task(calendar_id, year, month, day, task_id):
         task.details = ""
 
     taskForm = TaskForm()
+    taskForm.task_id.default = task.id
     taskForm.calendar_id.default = task.calendar_id
     taskForm.user_id.default = task.user_id
     taskForm.title.default = task.title
@@ -226,21 +229,19 @@ def edit_task(calendar_id, year, month, day, task_id):
         "calendar/task.html",
         form=taskForm,
         calendar_id=calendar_id,
-        year=year,
-        month=month,
-        day=day,
+        year=request.args.get("year"),
+        month=request.args.get("month"),
         min_year=calendar_query.min_year,
         max_year=calendar_query.max_year,
         month_names=Calendar.month_names(),
         task=vars(task),
-        editing=True,
         emojis_enabled=calendar_query.emojis_enabled,
         button_default_color_value=current_app.config["BUTTON_CUSTOM_COLOR_VALUE"],
         buttons_colors=current_app.config["BUTTONS_COLORS_LIST"],
         buttons_emojis=current_app.config["BUTTONS_EMOJIS_LIST"] if calendar_query.emojis_enabled else tuple(),
     )
 
-@mod_calendar.route('/<int:calendar_id>/task/<int:task_id>', methods=['POST'])
+@mod_calendar.route('/<int:calendar_id>/tasks/<int:task_id>', methods=['POST'])
 def update_task(calendar_id, task_id):
     title = request.form["title"].strip()
     color = request.form["color"]
@@ -280,7 +281,7 @@ def update_task(calendar_id, task_id):
 
     return redirect("/calendar/%d?y=%d&m=%d" % (calendar_id, task.start_time.year, task.start_time.month), code=302)
 
-@mod_calendar.route('/<int:calendar_id>/task/<int:task_id>', methods=['PATCH'])
+@mod_calendar.route('/<int:calendar_id>/tasks/<int:task_id>', methods=['PATCH'])
 def update_task_day(calendar_id, task_id):
     body = request.get_json()
     newDay = int(body.get('newDay'))
@@ -301,7 +302,7 @@ def update_task_day(calendar_id, task_id):
       'task_id': task_id
     })
 
-@mod_calendar.route('/<int:calendar_id>/task/<int:task_id>', methods=['DELETE'])
+@mod_calendar.route('/<int:calendar_id>/tasks/<int:task_id>', methods=['DELETE'])
 def delete_task(calendar_id, task_id):
     try:
         task = Task.getTask(task_id)

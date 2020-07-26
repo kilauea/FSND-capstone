@@ -1,18 +1,10 @@
 {% extends 'layouts/form.html' %}
 {% block title %}
-{% if editing %}
-    Edit Task
-{% else %}
-    New Task
-{% endif %}
+    Task
 {% endblock %}
 {% block content %}
 <div id="task-details-form" class="app-margin">
-{% if editing %}
-<form autocomplete="off" method="POST" action="/calendar/{{ calendar_id }}/task/{{ task["id"] }}">
-{% else %}
-<form autocomplete="off" method="POST" action="/calendar/{{ calendar_id }}/new_task">
-{% endif %}
+<form autocomplete="off" method="POST" action="">
     {{ form.hidden_tag() }}
     <div class="form-group row">
         <label for="title" class="col-sm-2 col-form-label">Title</label>
@@ -193,24 +185,6 @@
         }
     });
 
-    const editing = {% if editing %}true{% else %}false{% endif %};
-    const currentRepetitionValue = {{ task.get("repetition_value", 0) }};
-    const repetitionType = "{{ task["repetition_type"] }}";
-    const repetitionSubtype = "{{ task["repetition_type"] }}";
-    document.getElementById("delete-task").disabled = false;
-    if (editing === true) {
-        document.getElementById("repetition_value").value = currentRepetitionValue;
-        if (repetitionSubtype === "m") {
-            document.getElementById("repetition_value_monthday").selectedIndex = currentRepetitionValue - 1;
-        }
-        if (repetitionSubtype === "w") {
-            // week days are 0-index
-            document.getElementById("repetition_value_weekday").selectedIndex = currentRepetitionValue;
-        }
-    } else {
-        document.getElementById("delete-task").disabled = true;
-    }
-
     select_repetition_value_weekday = function(resetRepetitionValue = false) {
         document.getElementById("repetition_value_weekday").disabled = false;
         document.getElementById("repetition_value_monthday").disabled = true;
@@ -234,6 +208,32 @@
     };
 
     window.onload = function() {
+        const task_id = document.getElementById("task_id").value;
+        const calendar_id = document.getElementById("calendar_id").value;
+        const currentRepetitionValue = {{ task.get("repetition_value", 0) }};
+        const repetitionType = "{{ task["repetition_type"] }}";
+        const repetitionSubtype = "{{ task["repetition_type"] }}";
+        if (task_id && (task_id > 0)) {
+            const form_action = "/calendar/" + calendar_id + "/tasks/" + task_id;
+            $('form').attr('action', form_action);
+            document.title = 'Edit Task';
+
+            document.getElementById("repetition_value").value = currentRepetitionValue;
+            if (repetitionSubtype === "m") {
+                document.getElementById("repetition_value_monthday").selectedIndex = currentRepetitionValue - 1;
+            }
+            if (repetitionSubtype === "w") {
+                // week days are 0-index
+                document.getElementById("repetition_value_weekday").selectedIndex = currentRepetitionValue;
+            }
+        } else {
+            const form_action = "/calendar/" + calendar_id + "/tasks";
+            $('form').attr('action', form_action);
+            document.title = 'New Task';
+
+            document.getElementById("delete-task").disabled = true;
+        }
+
         document.getElementById("is_all_day").onclick = function(eventData) {
             if (eventData.target.checked === true) {
                 document.getElementById("start_time_block").className = "sr-only";
@@ -325,22 +325,26 @@
             return;
         };
 
-        {% if editing %}
         document.getElementById("delete-task").onclick = function() {
-            if (confirm("Remove task '" + document.getElementById("title").value +  "'?") === true) {
-                $.ajax({
-                    url: "/calendar/{{ calendar_id }}/task/" + {{ task["id"] }},
-                    type: "DELETE",
-                    success: (result) => {
-                        window.location = "/calendar/{{ calendar_id }}/?y={{ year }}&m={{ month }}";
-                    },
-                    error: (error) => {
-                        SetErrorStatusbar();
-                    }
-                })
+            if (task_id && (task_id > 0)) {
+                if (confirm("Remove task '" + document.getElementById("title").value +  "'?") === true) {
+                    $.ajax({
+                        url: "/calendar/" + calendar_id + "/tasks/" + task_id,
+                        type: "DELETE",
+                        success: (result) => {
+                            {% if year and  month %}
+                            window.location = "/calendar/" + calendar_id + "/?year={{ year }}&month={{ month }}";
+                            {% else %}
+                            window.location = "/calendar/" + calendar_id;
+                            {% endif %}
+                        },
+                        error: (error) => {
+                            SetErrorStatusbar();
+                        }
+                    })
+                }
             }
         };
-        {% endif %};
     }
 </script>
 {% endblock %}
