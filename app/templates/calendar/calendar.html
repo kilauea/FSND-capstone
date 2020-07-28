@@ -1,21 +1,12 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>Calendar</title>
-    <link rel="stylesheet" href="{{ url_for("static", filename="css/style.css") }}">
-    <link rel="shortcut icon" type="image/x-icon" href="{{ url_for("static", filename="") }}ico/favicon_{{ current_day }}.png" id="favicon">
-
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.js"></script>
-
-    <meta name="viewport" content="width=400" />
-</head>
-<body>
-    <div id="statusbar" class="">Processing...</div>
+{% extends 'layouts/main.html' %}
+{% block shortcut_icon %}
+<link rel="shortcut icon" type="image/x-icon" href="{{ url_for("static", filename="") }}ico/favicon_{{ current_day }}.png" id="favicon">
+{% endblock %}
+{% block title %}
+    Calendar
+{% endblock %}
+{% block content %}
+    <div id="statusbar">Processing...</div>
 
     <div class="header">
         <input type="button" class="header-button" value="+"
@@ -37,7 +28,7 @@
         {% endif %}
     </div>
 
-    <ul class="calendar-header">
+   <ul class="calendar-header">
         {% for weekday_header in weekdays_headers %}
             <li class="weekday-header">{{ weekday_header }}</li>
         {% endfor %}
@@ -117,6 +108,7 @@
             </li>
         {% endfor %}
     </ul>
+
 <script type="text/javascript">
     var csrf_token = "{{ csrf_token() }}";
     $.ajaxSetup({
@@ -364,6 +356,4 @@
         };
     };
 </script>
-
-</body>
-</html>
+{% endblock %}

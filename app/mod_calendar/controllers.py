@@ -1,5 +1,18 @@
 import sys
-from flask import Blueprint, abort, current_app, g, jsonify, make_response, redirect, render_template, request
+from flask import (
+    Blueprint,
+    abort,
+    current_app,
+    g,
+    jsonify,
+    make_response,
+    redirect,
+    render_template,
+    request,
+    session
+)
+from flask_wtf import FlaskForm
+from wtforms import HiddenField
 from datetime import date, datetime, timedelta
 import re
 
@@ -40,6 +53,21 @@ def next_month_link(calendar_id, year, month):
         else "?y={}&m={}".format(year, month)
     )
 
+@mod_calendar.route('/', methods=['GET'])
+def index():
+    calendars = Calendar.query.order_by(Calendar.date_created.desc()).limit(10).all()
+    class MyCSRFForm(FlaskForm):
+        user_id = HiddenField('user_id')
+    form = MyCSRFForm()
+
+    return render_template(
+        'calendar/home.html',
+        session=session,
+        calendars=calendars,
+        form=form,
+        dashboard_link='/auth/dashboard'
+    )
+
 @mod_calendar.route('/<int:calendar_id>/', methods=['GET'])
 def show_calendar(calendar_id):
     calendar_query = Calendar.query.get(calendar_id)
@@ -67,6 +95,7 @@ def show_calendar(calendar_id):
 
     return render_template(
         "calendar/calendar.html",
+        session=session,
         calendar_id=calendar_id,
         year=year,
         month=month,
@@ -79,8 +108,20 @@ def show_calendar(calendar_id):
         next_month_link=next_month_link(calendar_id, year, month),
         tasks=tasks,
         display_view_past_button=calendar_query.show_view_past_btn,
-        weekdays_headers=weekdays_headers
+        weekdays_headers=weekdays_headers,
+        dashboard_link='/auth/dashboard'
     )
+
+@mod_calendar.route('/<int:calendar_id>/', methods=['DELETE'])
+def delete_calendar(calendar_id):
+    calendar_query = Calendar.query.get(calendar_id)
+    if calendar_query is None:
+        return not_found_error('Calendar %s not found' % calendar_id)
+
+    return jsonify({
+        'success': True,
+        'task_id': task_id
+    })
 
 @mod_calendar.route('/<int:calendar_id>/tasks', methods=['GET'])
 def new_task_form(calendar_id):
@@ -314,6 +355,6 @@ def delete_task(calendar_id, task_id):
         return unprocessable_entity_error('Task %s not saved' % task_id)
 
     return jsonify({
-      'success': True,
-      'task_id': task_id
+        'success': True,
+        'task_id': task_id
     })

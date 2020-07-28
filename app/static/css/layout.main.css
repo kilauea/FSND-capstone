@@ -12,6 +12,7 @@ body {
   min-height: 100%;
   height: auto !important;
   height: 100%;
+  width: 100vw ! important;
   /* Negative indent footer by its height */
   margin: 0 auto -60px;
   /* Pad bottom by footer height */
@@ -29,7 +30,7 @@ body {
 /* Not required for template or sticky footer method. */
 
 #wrap > .container {
-  padding: 80px 15px 0;
+  padding: 20px 15px 0;
 }
 .container .credit {
   margin: 20px 0;

@@ -1,0 +1,63 @@
+{% extends 'layouts/main.html' %}
+{% block title %}Calendar{% endblock %}
+{% block content %}
+<div class="row">
+	<div class="col-sm-6">
+		<ul class="items">
+			<li class="clearfix">
+				<button type="button" class="pull-left btn btn-primary btn-rounded btn-sm my-0" onclick="window.location.href='/calendar/create'">+</button>
+				<div class="item">
+					<h3 class="clearfix">Calendars</h3>
+				</div>
+			</li>
+		</ul>
+	</div>
+</div>
+<div class="row">
+	<div class="col-sm-6">
+		<ul class="items">
+			{% for calendar in calendars %}
+			<li class="clearfix">
+				<a href="/calendar/{{ calendar.id }}" style="float: left;">
+					<div class="item">
+						<h5>{{ calendar.date_created }} - {{ calendar.name }}</h5>
+					</div>
+				</a>
+				<button type="button" class="pull-right btn btn-danger btn-rounded btn-sm my-0" data-id="{{ calendar.id }}">&cross;</button>
+				<button type="button" class="pull-right btn btn-primary btn-rounded btn-sm my-0" onclick="window.location.href='/calendar/{{ calendar.id }}/edit'">...</button>
+			</li>
+			{% endfor %}
+		</ul>
+	</div>
+</div>
+{{ form.hidden_tag() }}
+<script>
+	var csrf_token = "{{ csrf_token() }}";
+	$.ajaxSetup({
+		beforeSend: function(xhr, settings) {
+			if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+				xhr.setRequestHeader("X-CSRFToken", csrf_token);
+			}
+		}
+	});
+
+	deleteButtons = document.querySelectorAll('.btn-danger');
+	for (let i = 0; i < deleteButtons.length; i++) {
+        const button = deleteButtons[i];
+        button.onclick = function(e) {
+            console.log('event', e);
+            const calendar_id = e.target.dataset['id'];
+            $.ajax({
+                url: "/calendar/" + calendar_id,
+                type: "DELETE",
+                success: (result) => {
+                    window.location = "/calendar/";
+                },
+                error: (error) => {
+                    location.reload();
+                }
+            });
+	    }
+    }
+</script>
+{% endblock %}

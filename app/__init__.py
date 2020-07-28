@@ -1,4 +1,4 @@
-from flask import Flask, render_template, current_app, send_from_directory
+from flask import Flask, render_template, current_app, send_from_directory, redirect
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask_migrate import Migrate
@@ -67,6 +67,10 @@ def create_app(test_config=None):
     app.register_blueprint(auth_module)
     app.register_blueprint(calendar_module)
 
+    @app.route('/', methods=['GET'])
+    def index():
+        return redirect("/calendar", code=302)
+
     # To avoid main_calendar_action below shallowing favicon requests and generating error logs
     @app.route("/favicon.ico")
     def favicon():
@@ -87,15 +91,6 @@ def after_request(response):
    response.headers.add('Access-Control-Allow-Origin', '*')
    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,true')
    return response
-
-# @app.after_request
-# def after_request(response):
-#     header = response.headers
-#     header['Access-Control-Allow-Origin'] = '*'
-#     header['Access-Control-Allow-Headers'] = 'Content-Type,Authorization,true'
-#     header['Access-Control-Allow-Methods'] = 'GET,PUT,POST,PATCH,DELETE,OPTIONS'
-#     header['Allow'] = 'GET,HEAD,PUT,POST,PATCH,DELETE,OPTIONS'
-#     return response
 
 @app.errorhandler(404)
 def not_found_error(error):

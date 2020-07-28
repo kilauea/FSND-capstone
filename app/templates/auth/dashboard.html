@@ -1,0 +1,12 @@
+{% extends 'layouts/main.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="logged-in-box auth0-box logged-in">
+    <div class="row">
+        <div class="col-sm-6">
+            <h3 class="clearfix">Welcome:</h3>
+            <pre>{{userinfo_pretty}}</pre>
+        </div>
+    </div>
+</div>
+{% endblock %}

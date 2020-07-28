@@ -141,13 +141,14 @@ li {
   min-width: 400px;
   border-bottom: #DADCE0 1px solid;
   border-left: #DADCE0 1px solid;
+  height: auto !important;
 }
 
 .day {
   background-color: #F9F9F9;
   padding: 3px;
   margin: 0;
-  min-height: 120px;
+  height: 110px;
   list-style:none;
   flex-grow: 1;
   flex-basis: 13.5%;
@@ -262,7 +263,12 @@ ul.tasks li a {
     background-color: #EB5A46;
 }
 
-@media screen and (max-width:650px) {
+@media screen {
+    .container {
+        width: 100vw ! important;
+        max-width: 100vw ! important;
+        height: auto !important;
+    }
 
     .header-button {
         font-size: 18px;
@@ -277,10 +283,6 @@ ul.tasks li a {
 
     .header .back-to-current {
         font-size: 0.60em;
-    }
-
-    .day {
-        min-height: 30px;
     }
 
     ul.tasks li a, span.recurrent-task {
