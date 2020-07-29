@@ -20,7 +20,8 @@
 			<li class="clearfix">
 				<a href="/calendar/{{ calendar.id }}" style="float: left;">
 					<div class="item">
-						<h5>{{ calendar.date_created }} - {{ calendar.name }}</h5>
+						<h5>{{ calendar.date_created.strftime("%d/%m/%Y %H:%M") }} - {{ calendar.name }}</h5>
+                        <input class="form-control" type="hidden" id="calendar_{{ calendar.id }}_name" name="calendar_{{ calendar.id }}_name" value="{{ calendar.name }}" />
 					</div>
 				</a>
 				<button type="button" class="pull-right btn btn-danger btn-rounded btn-sm my-0" data-id="{{ calendar.id }}">&cross;</button>
@@ -47,16 +48,19 @@
         button.onclick = function(e) {
             console.log('event', e);
             const calendar_id = e.target.dataset['id'];
-            $.ajax({
-                url: "/calendar/" + calendar_id,
-                type: "DELETE",
-                success: (result) => {
-                    window.location = "/calendar/";
-                },
-                error: (error) => {
-                    location.reload();
-                }
-            });
+            const name = document.getElementById("calendar_" + calendar_id + "_name").value;
+            if (confirm("Delete calendar '" + name + "'?") == true) {
+                $.ajax({
+                        url: "/calendar/"  + calendar_id + "/delete",
+                        type: "DELETE",
+                        success: (result) => {
+                                window.location = "/calendar/";
+                        },
+                        error: (error) => {
+                                location.reload();
+                        }
+                });
+            }
 	    }
     }
 </script>

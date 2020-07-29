@@ -177,7 +177,7 @@ def requires_auth(permission=None):
           'code': 'invalid_header',
           'description': 'Token not found.'
         }, 401)
-      token = session[constants.JWT_TOKEN] #get_token_auth_header()
+      token = session[constants.JWT_TOKEN]
       payload = verify_decode_jwt(token)
       if permission:
         check_permissions(permission, payload)

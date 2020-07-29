@@ -32,6 +32,34 @@ class Calendar(Base):
     #     single_parent=True
     # )
 
+    def __init__(
+        self,
+        id=None,
+        name=None,
+        description=None,
+        min_year=None,
+        max_year=None,
+        time_zone=None,
+        week_starting_day=None,
+        emojis_enabled=None,
+        show_view_past_btn=None,
+        auto_decorate_task_details_hyperlink=True,
+        hide_past_tasks=False,
+        days_past_to_keep_hidden_tasks=62
+    ):
+        self.id  = id
+        self.name = name
+        self.description = description
+        self.min_year = min_year
+        self.max_year = max_year
+        self.time_zone = time_zone 
+        self.week_starting_day = week_starting_day
+        self.emojis_enabled = emojis_enabled
+        self.show_view_past_btn = show_view_past_btn
+        self.auto_decorate_task_details_hyperlink = auto_decorate_task_details_hyperlink
+        self.hide_past_tasks = hide_past_tasks
+        self.days_past_to_keep_hidden_tasks = days_past_to_keep_hidden_tasks
+
     @staticmethod
     def month_names():
         return [
@@ -86,6 +114,43 @@ class Calendar(Base):
     @staticmethod
     def month_days_with_weekday(year, month):
         return calendar.Calendar(calendar.firstweekday()).monthdayscalendar(year, month)
+
+    '''
+    insert()
+        inserts a new model into a database
+        the model must have a unique name
+        the model must have a unique id or null id
+        EXAMPLE
+            drink = Drink(title=req_title, recipe=req_recipe)
+            drink.insert()
+    '''
+    def insert(self):
+        db.session.add(self)
+        db.session.commit()
+
+    '''
+    delete()
+        deletes a new model into a database
+        the model must exist in the database
+        EXAMPLE
+            drink = Drink(title=req_title, recipe=req_recipe)
+            drink.delete()
+    '''
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+
+    '''
+    update()
+        updates a new model into a database
+        the model must exist in the database
+        EXAMPLE
+            drink = Drink.query.filter(Drink.id == id).one_or_none()
+            drink.title = 'Black Coffee'
+            drink.update()
+    '''
+    def update(self):
+        db.session.commit()
 
 class Task(Base):
     __tablename__ = 'task'

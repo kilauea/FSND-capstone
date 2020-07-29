@@ -1,13 +1,38 @@
 from datetime import datetime, timedelta
 from flask_wtf import FlaskForm
-from wtforms import StringField, SelectField, SelectMultipleField, DateTimeField, DateField, BooleanField, TextAreaField, HiddenField
-from wtforms.validators import DataRequired, AnyOf, URL, Length, Regexp, Optional
-from app.mod_calendar.models import Task
+from wtforms import (
+    StringField, SelectField, SelectMultipleField,
+    DateTimeField, DateField, BooleanField,
+    TextAreaField, HiddenField, IntegerField
+)
+from wtforms.validators import (
+    DataRequired, AnyOf, URL,
+    Length, Regexp, Optional,
+    NumberRange
+)
+from app.mod_calendar.models import Calendar, Task
+
+class CalendarForm(FlaskForm):
+    calendar_id = HiddenField('calendar_id')
+    name = StringField('Name', validators=[DataRequired(), Length(max=128)], render_kw={'autofocus': True})
+    description = TextAreaField('Description', validators=[Length(max=256)])
+    min_year = IntegerField('Minimum calendar year', default = 1900, validators=[DataRequired(), NumberRange(min=1900, max=2200)])
+    max_year = IntegerField('Maximum calendar year', default = 2200, validators=[DataRequired(), NumberRange(min=1900, max=2200)])
+    time_zone = StringField('Time Zone', default="Europe/Madrid", validators=[DataRequired(), Length(max=128)])
+    week_starting_day = SelectField('Week Starting Day',
+        choices = [
+            ('0', 'Monday'),
+            ('1', 'Tuesday'),
+            ('2', 'Wednesday'),
+            ('3', 'Thursday'),
+            ('4', 'Friday'),
+            ('5', 'Saturday'),
+            ('6', 'Sunday')
+        ], validators=[DataRequired()])
+    emojis_enabled = BooleanField('Enable Emojis', default=True, false_values={False, 'false', ''})
+    show_view_past_btn = BooleanField('Show View Past Button', default=True, false_values={False, 'false', ''})
 
 class TaskForm(FlaskForm):
-    #start = datetime.now()
-    #end = start + timedelta(hours=8)
-
     task_id = HiddenField('task_id')
     calendar_id = HiddenField('calendar_id')
     user_id = HiddenField('user_id')

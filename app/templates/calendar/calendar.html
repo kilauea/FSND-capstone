@@ -23,6 +23,9 @@
                 <a href="/calendar/{{ calendar_id }}">back to current</a>
             </div>
         {% endif %}
+        <div class="header">
+            <a href="/calendar/{{ calendar_id }}/edit">{{ description }}</a>
+        </div>
         {% if display_view_past_button %}
             <input id="toggle-past-events" class="toggle-past-events" type="button" value="View Past" onclick="ToggleViewPastTasks();" />
         {% endif %}

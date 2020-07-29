@@ -1,0 +1,53 @@
+{% extends 'layouts/form.html' %}
+{% block title %}
+    Calendar detais
+{% endblock %}
+{% block content %}
+<div class="row">
+  <div class="col-sm-6">
+    <div class="form-wrapper">
+    {% if form.calendar_id.data == 0 %}
+      <form class="form" method="post" action="/calendar/create">
+    {% else %}
+      <form class="form" method="post" action="/calendar/{{form.calendar_id.data}}/edit">
+    {% endif %}
+        {{ form.hidden_tag() }}
+        <h3 class="form-heading">{% if form.calendar_id.data == 0 %}New{% else %}Edit{% endif %} calendar</h3>
+        <div class="form-group">
+          {{ form.name.label }}
+          {{ form.name(class_ = 'form-control', autofocus = true) }}
+        </div>
+        <div class="form-group">
+          {{ form.description.label }}
+          {{ form.description(class_ = 'form-control', placeholder='Description', autofocus = true) }}
+        <div class="form-group">
+          {{ form.min_year.label }}
+          {{ form.min_year(class_ = 'form-control', autofocus = true) }}
+        </div>
+        <div class="form-group">
+          {{ form.max_year.label }}
+          {{ form.max_year(class_ = 'form-control', autofocus = true) }}
+        </div>
+        <div class="form-group">
+          {{ form.time_zone.label }}
+          {{ form.time_zone(class_ = 'form-control', autofocus = true) }}
+        </div>
+        <div class="form-group">
+          {{ form.week_starting_day.label }}
+          {{ form.week_starting_day(class_ = 'form-control', autofocus = true) }}
+        </div>
+        <div class="form-group">
+          {{ form.emojis_enabled.label }}
+          {{ form.emojis_enabled(class_ = 'form-control', autofocus = true) }}
+        </div>
+        <div class="form-group">
+          {{ form.show_view_past_btn.label }}
+          {{ form.show_view_past_btn(class_ = 'form-control', autofocus = true) }}
+        </div>
+        <input class="btn btn-primary" type="submit" value="Save">
+        <input class="btn btn-primary" type="button" value="Cancel" onclick="window.history.go(-1); return false;" />
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

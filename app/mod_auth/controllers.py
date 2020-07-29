@@ -1,3 +1,4 @@
+import sys
 from functools import wraps
 import json
 from dotenv import load_dotenv, find_dotenv
@@ -71,19 +72,23 @@ else:
 @mod_auth.route('/callback/')
 def callback_handling():
     if __USE_AUTHLIB__:
-        # Handles response from token endpoint
-        auth0.authorize_access_token()
-        resp = auth0.get('userinfo')
-        userinfo = resp.json()
+        try:
+            # Handles response from token endpoint
+            auth0.authorize_access_token()
+            resp = auth0.get('userinfo')
+            userinfo = resp.json()
 
-        # Store the user information in flask session.
-        session[constants.JWT_PAYLOAD] = userinfo
-        session[constants.PROFILE_KEY] = {
-            'user_id': userinfo['sub'],
-            'name': userinfo['name'],
-            'picture': userinfo['picture']
-        }
-        session[constants.JWT_TOKEN] = auth0.token['access_token']
+            # Store the user information in flask session.
+            session[constants.JWT_PAYLOAD] = userinfo
+            session[constants.PROFILE_KEY] = {
+                'user_id': userinfo['sub'],
+                'name': userinfo['name'],
+                'picture': userinfo['picture']
+            }
+            session[constants.JWT_TOKEN] = auth0.token['access_token']
+        except:
+            session.clear()
+            print("Unexpected error:", sys.exc_info()[0])
         return redirect('/calendar')
     else:
         return redirect('/calendar')
@@ -113,4 +118,5 @@ def logout():
 def dashboard():
     return render_template('auth/dashboard.html',
                            userinfo=session[constants.PROFILE_KEY],
-                           userinfo_pretty=json.dumps(session[constants.JWT_PAYLOAD], indent=4))
+                           userinfo_pretty=json.dumps(session[constants.JWT_PAYLOAD], indent=4),
+                           userperm_pretty=json.dumps(auth.verify_decode_jwt(session[constants.JWT_TOKEN]), indent=4))

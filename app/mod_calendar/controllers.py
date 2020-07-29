@@ -9,7 +9,8 @@ from flask import (
     redirect,
     render_template,
     request,
-    session
+    session,
+    flash
 )
 from flask_wtf import FlaskForm
 from wtforms import HiddenField
@@ -18,7 +19,8 @@ import re
 
 from app.mod_calendar.models import Calendar
 from app.mod_calendar.models import Task
-from app.mod_calendar.forms import TaskForm
+from app.mod_calendar.forms import CalendarForm, TaskForm
+import app.mod_auth.auth as auth
 
 # Define the blueprint: 'auth', set its url prefix: app.url/auth
 mod_calendar = Blueprint('calendar', __name__, url_prefix='/calendar')
@@ -69,7 +71,8 @@ def index():
     )
 
 @mod_calendar.route('/<int:calendar_id>/', methods=['GET'])
-def show_calendar(calendar_id):
+@auth.requires_auth('get:calendars')
+def get_calendar(jwt, calendar_id):
     calendar_query = Calendar.query.get(calendar_id)
     if calendar_query is None:
         return not_found_error('Calendar %s not found' % calendar_id)
@@ -97,6 +100,7 @@ def show_calendar(calendar_id):
         "calendar/calendar.html",
         session=session,
         calendar_id=calendar_id,
+        description=calendar_query.description,
         year=year,
         month=month,
         month_name=month_name,
@@ -112,19 +116,124 @@ def show_calendar(calendar_id):
         dashboard_link='/auth/dashboard'
     )
 
-@mod_calendar.route('/<int:calendar_id>/', methods=['DELETE'])
-def delete_calendar(calendar_id):
+@mod_calendar.route('/create', methods=['GET'])
+@auth.requires_auth('post:calendars')
+def new_calendar(jwt):
+    form = CalendarForm()
+    form.calendar_id.default = 0
+    form.process()
+    calendar = Calendar()
+    calendar.id = 0
+    return render_template("calendar/calendar_form.html", form=form)
+
+@mod_calendar.route('/create', methods=['POST'])
+@auth.requires_auth('post:calendars')
+def save_calendar(jwt):
+    try:
+        form = CalendarForm()
+        if form.validate():
+            calendar = Calendar(
+                name = form.name.data,
+                description = form.description.data,
+                min_year = int(form.min_year.data),
+                max_year = int(form.max_year.data),
+                time_zone = form.time_zone.data,
+                week_starting_day = int(form.week_starting_day.data),
+                emojis_enabled = form.emojis_enabled.data,
+                show_view_past_btn = form.show_view_past_btn.data
+            )
+            calendar.insert()
+        else:
+            error_msg = ''
+            if form.errors:
+                for key, value in form.errors.items():
+                    error_msg += ' -' + key + ': ' + value[0]
+            if len(error_msg):
+                flash('Error! Calendar ' + form.name.data + ' contains invalid data!' + error_msg)
+            return render_template("calendar/calendar_form.html", form=form)
+    except:
+        print("Unexpected error:", sys.exc_info()[0])
+        return unprocessable_entity_error('Calendar not created')
+
+    flash('Calendar ' + form.name.data + ' was successfully created!')
+    return redirect("/calendar/%d" % (calendar.id), code=302)
+
+@mod_calendar.route('/<int:calendar_id>/delete', methods=['DELETE'])
+@auth.requires_auth('delete:calendars')
+def delete_calendar(jwt, calendar_id):
+    calendar_query = Calendar.query.get(calendar_id)
+    if calendar_query is None:
+        return not_found_error('Calendar %s not found' % calendar_id)
+    name = calendar_query.name
+    try:
+        calendar_query.delete()
+    except:
+        print("Unexpected error:", sys.exc_info()[0])
+        return unprocessable_entity_error('Calendar not deleted')
+
+    flash('Calendar ' + name + ' was successfully deleted!')
+    return redirect("/calendar/", code=302)
+
+@mod_calendar.route('/<int:calendar_id>/edit', methods=['GET'])
+@auth.requires_auth('patch:calendars')
+def edit_calendar_form(jwt, calendar_id):
     calendar_query = Calendar.query.get(calendar_id)
     if calendar_query is None:
         return not_found_error('Calendar %s not found' % calendar_id)
 
-    return jsonify({
-        'success': True,
-        'task_id': task_id
-    })
+    form = CalendarForm()
+    form.calendar_id.default = calendar_query.id
+    form.name.default = calendar_query.name
+    form.description.default = calendar_query.description
+    form.min_year.default = calendar_query.min_year
+    form.max_year.default = calendar_query.max_year
+    form.time_zone.default = calendar_query.time_zone
+    form.week_starting_day.default = calendar_query.week_starting_day
+    form.time_zone.default = calendar_query.time_zone
+    form.emojis_enabled.default = calendar_query.emojis_enabled
+    form.show_view_past_btn.default = calendar_query.show_view_past_btn
+    form.process()
+
+    return render_template("calendar/calendar_form.html", form=form)
+
+@mod_calendar.route('/<int:calendar_id>/edit', methods=['POST'])
+@auth.requires_auth('post:calendars')
+def save_calendar_form(jwt, calendar_id):
+    calendar_query = Calendar.query.get(calendar_id)
+    if calendar_query is None:
+        return not_found_error('Calendar %s not found' % calendar_id)
+    try:
+        form = CalendarForm()
+        if form.validate():
+            calendar_query.id = int(form.calendar_id.data)
+            calendar_query.name = form.name.data
+            calendar_query.description = form.description.data
+            calendar_query.min_year = int(form.min_year.data)
+            calendar_query.max_year = int(form.max_year.data)
+            calendar_query.time_zone = form.time_zone.data
+            calendar_query.week_starting_day = int(form.week_starting_day.data)
+            calendar_query.emojis_enabled = form.emojis_enabled.data
+            calendar_query.show_view_past_btn = form.show_view_past_btn.data
+            calendar_query.update()
+        else:
+            error_msg = ''
+            if form.errors:
+                for key, value in form.errors.items():
+                    error_msg += ' -' + key + ': ' + value[0]
+            if len(error_msg):
+                flash('Error! Calendar ' + form.name.data + ' contains invalid data!' + error_msg)
+            return render_template("calendar/calendar_form.html", calendar=vars(calendar_query), form=form)
+    except:
+        print("Unexpected error:", sys.exc_info()[0])
+        return unprocessable_entity_error('Calendar %s not saved' % calendar_id)
+
+    flash('Calendar ' + form.name.data + ' was successfully saved!')
+    return redirect("/calendar/%d" % (calendar_id), code=302)
+
 
 @mod_calendar.route('/<int:calendar_id>/tasks', methods=['GET'])
-def new_task_form(calendar_id):
+@auth.requires_auth('post:tasks')
+def new_task_form(jwt, calendar_id):
     calendar_query = Calendar.query.get(calendar_id)
     if calendar_query is None:
         return not_found_error('Calendar %s not found' % calendar_id)
@@ -195,7 +304,8 @@ def new_task_form(calendar_id):
     )
 
 @mod_calendar.route('/<int:calendar_id>/tasks', methods=['POST'])
-def create_task(calendar_id):
+@auth.requires_auth('post:tasks')
+def create_task(jwt, calendar_id):
     title = request.form["title"].strip()
     start_date = request.form.get("start_date", "")
     end_date = request.form.get("end_date", "")
@@ -236,7 +346,8 @@ def create_task(calendar_id):
         return redirect("/calendar/%s" % (calendar_id), code=302)
 
 @mod_calendar.route('/<int:calendar_id>/tasks/<int:task_id>', methods=['GET'])
-def edit_task(calendar_id, task_id):
+@auth.requires_auth('patch:tasks')
+def edit_task(jwt, calendar_id, task_id):
     calendar_query = Calendar.query.get(calendar_id)
     if calendar_query is None:
         return not_found_error('Calendar %s not found' % calendar_id)
@@ -283,7 +394,8 @@ def edit_task(calendar_id, task_id):
     )
 
 @mod_calendar.route('/<int:calendar_id>/tasks/<int:task_id>', methods=['POST'])
-def update_task(calendar_id, task_id):
+@auth.requires_auth('patch:tasks')
+def update_task(jwt, calendar_id, task_id):
     title = request.form["title"].strip()
     color = request.form["color"]
     details = request.form["details"].replace("\r", "").replace("\n", "<br>")
@@ -323,7 +435,8 @@ def update_task(calendar_id, task_id):
     return redirect("/calendar/%d?y=%d&m=%d" % (calendar_id, task.start_time.year, task.start_time.month), code=302)
 
 @mod_calendar.route('/<int:calendar_id>/tasks/<int:task_id>', methods=['PATCH'])
-def update_task_day(calendar_id, task_id):
+@auth.requires_auth('patch:tasks')
+def update_task_day(jwt, calendar_id, task_id):
     body = request.get_json()
     newDay = int(body.get('newDay'))
     try:
@@ -344,7 +457,8 @@ def update_task_day(calendar_id, task_id):
     })
 
 @mod_calendar.route('/<int:calendar_id>/tasks/<int:task_id>', methods=['DELETE'])
-def delete_task(calendar_id, task_id):
+@auth.requires_auth('delete:tasks')
+def delete_task(jwt, calendar_id, task_id):
     try:
         task = Task.getTask(task_id)
         if task == None:
