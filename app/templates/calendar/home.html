@@ -18,7 +18,7 @@
 		<ul class="items">
 			{% for calendar in calendars %}
 			<li class="clearfix">
-				<a href="/calendar/{{ calendar.id }}" style="float: left;">
+				<a href="/calendar/{{ calendar.id }}/" style="float: left;">
 					<div class="item">
 						<h5>{{ calendar.date_created.strftime("%d/%m/%Y %H:%M") }} - {{ calendar.name }}</h5>
                         <input class="form-control" type="hidden" id="calendar_{{ calendar.id }}_name" name="calendar_{{ calendar.id }}_name" value="{{ calendar.name }}" />

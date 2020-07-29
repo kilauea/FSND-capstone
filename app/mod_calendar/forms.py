@@ -35,7 +35,6 @@ class CalendarForm(FlaskForm):
 class TaskForm(FlaskForm):
     task_id = HiddenField('task_id')
     calendar_id = HiddenField('calendar_id')
-    user_id = HiddenField('user_id')
     title = StringField('Title', validators=[DataRequired(), Length(max=128)], render_kw={'autofocus': True})
     color = StringField('Color', validators=[Length(max=32)])
     details = TextAreaField('Details', validators=[Length(max=256)])

@@ -59,7 +59,7 @@ def next_month_link(calendar_id, year, month):
 def index():
     calendars = Calendar.query.order_by(Calendar.date_created.desc()).limit(10).all()
     class MyCSRFForm(FlaskForm):
-        user_id = HiddenField('user_id')
+        id = HiddenField('id')
     form = MyCSRFForm()
 
     return render_template(
@@ -256,7 +256,6 @@ def new_task_form(jwt, calendar_id):
     end_time = start_time + timedelta(hours=23, minutes=59, seconds=59)
     task = Task(
         calendar_id=calendar_id,
-        user_id=1,
         title='',
         color=current_app.config["BUTTON_CUSTOM_COLOR_VALUE"],
         details='',
@@ -272,7 +271,6 @@ def new_task_form(jwt, calendar_id):
     taskForm = TaskForm()
     taskForm.task_id.default = 0
     taskForm.calendar_id.default = calendar_id
-    taskForm.user_id.default = 1
     taskForm.title.default = ''
     taskForm.color.default = current_app.config["BUTTON_CUSTOM_COLOR_VALUE"]
     taskForm.details.default = ''
@@ -328,7 +326,6 @@ def create_task(jwt, calendar_id):
 
         newTask = Task(
             calendar_id=calendar_id,
-            user_id=1,
             title=title,
             color=color,
             details=details,
@@ -362,7 +359,6 @@ def edit_task(jwt, calendar_id, task_id):
     taskForm = TaskForm()
     taskForm.task_id.default = task.id
     taskForm.calendar_id.default = task.calendar_id
-    taskForm.user_id.default = task.user_id
     taskForm.title.default = task.title
     taskForm.color.default = task.color
     taskForm.details.default = task.details
@@ -415,7 +411,6 @@ def update_task(jwt, calendar_id, task_id):
             return not_found_error('Task %s not found' % task_id)
 
         task.calendar_id = calendar_id
-        task.user_id = 1
         task.title = title
         task.color = color
         task.details = details

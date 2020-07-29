@@ -1,15 +1,14 @@
-from flask import Flask, render_template, current_app, send_from_directory, redirect
+__all__ = ['mod_auth', 'mod_base', 'mod_calendar']
+
+from flask import Flask, render_template, current_app, send_from_directory, redirect, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect
 import os
 import re
-import logging
 
-# Define the database object which is imported
-# by modules and controllers
-db = SQLAlchemy()
+from app.mod_auth.auth import AuthError
 
 def task_details_for_markup(details):
     URLS_REGEX_PATTERN = r"(https?\:\/\/[\w/\-?=%.]+\.[\w/\+\-?=%.~&\[\]\#]+)"
@@ -36,10 +35,10 @@ def setup_db(app, database_path, track_modifications=False):
     db.init_app(app)
 
 '''
-create_app(test_config)
+create_app(config)
     creates the flask application
 '''
-def create_app(test_config=None):
+def create_app(config='config'):
     csrf = CSRFProtect()
 
     # Define the WSGI application object
@@ -48,7 +47,7 @@ def create_app(test_config=None):
     app.jinja_env.filters["task_details_for_markup"] = task_details_for_markup
 
     # Configurations
-    app.config.from_object('config')
+    app.config.from_object(config)
     app.config['CORS_HEADERS'] = 'Content-Type'
     csrf.init_app(app)
 
@@ -69,7 +68,7 @@ def create_app(test_config=None):
 
     @app.route('/', methods=['GET'])
     def index():
-        return redirect("/calendar", code=302)
+        return redirect("/calendar/", code=302)
 
     # To avoid main_calendar_action below shallowing favicon requests and generating error logs
     @app.route("/favicon.ico")
@@ -78,24 +77,41 @@ def create_app(test_config=None):
             os.path.join("static", "ico"), "favicon.ico", mimetype="image/vnd.microsoft.icon",
         )
 
+    # CORS Headers 
+    @app.after_request
+    def after_request(response):
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,true')
+        return response
+
+    @app.errorhandler(404)
+    def not_found_error(error):
+        return render_template('errors/404.html'), 404
+
+    @app.errorhandler(500)
+    def server_error(error):
+        return render_template('errors/500.html'), 500
+
+    '''
+    Error handler for AuthError
+        error handler should conform to general task above 
+    '''
+    @app.errorhandler(AuthError)
+    def handle_auth_error(error):
+        return jsonify({
+            "success": False, 
+            "error": error.status_code,
+            "message": error.error['description']
+        }), error.status_code
+
     # Create the Flask-Migrate object
     migrate = Migrate(app, db)
 
     return app
 
+# Define the database object which is imported
+# by modules and controllers
+db = SQLAlchemy()
+
+# Create the app
 app = create_app()
-
-# CORS Headers 
-@app.after_request
-def after_request(response):
-   response.headers.add('Access-Control-Allow-Origin', '*')
-   response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,true')
-   return response
-
-@app.errorhandler(404)
-def not_found_error(error):
-    return render_template('errors/404.html'), 404
-
-@app.errorhandler(500)
-def server_error(error):
-    return render_template('errors/500.html'), 500

@@ -157,7 +157,6 @@ class Task(Base):
 
     id = db.Column(db.Integer, primary_key=True)
     calendar_id = db.Column(db.Integer, db.ForeignKey('calendar.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('auth_user.id'), nullable=False)
     title = db.Column(db.String(128), nullable=False)
     color = db.Column(db.String(32), nullable=False)
     details = db.Column(db.String(256), nullable=False)
@@ -172,7 +171,6 @@ class Task(Base):
     def __init__(
         self,
         calendar_id=None,
-        user_id=None,
         title=None,
         color=None,
         details=None,
@@ -185,7 +183,6 @@ class Task(Base):
         repetition_subtype=None
     ):
         self.calendar_id = calendar_id
-        self.user_id = user_id
         self.title = title
         self.color = color
         self.details = details
@@ -218,7 +215,6 @@ class Task(Base):
         return {
             'id': self.id,
             'calendar_id': self.calendar_id,
-            'user_id': self.user_id,
             'title': self.title,
             'color': self.color,
             'details': self.details,

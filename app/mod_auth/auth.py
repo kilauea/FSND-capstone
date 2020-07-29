@@ -2,7 +2,7 @@ import json
 from flask import request, _request_ctx_stack, session
 from functools import wraps
 from jose import jwt
-from urllib.request import urlopen
+from urllib.request import urlopen, URLError
 from authlib.integrations.flask_client import OAuth
 import app.mod_auth.constants as constants
 
@@ -102,8 +102,16 @@ def check_permissions(permission, payload):
     !!NOTE urlopen has a common certificate error described here: https://stackoverflow.com/questions/50236117/scraping-ssl-certificate-verify-failed-error-for-http-en-wikipedia-org
 '''
 def verify_decode_jwt(token):
-  jsonurl = urlopen(f'https://{AUTH0_DOMAIN}/.well-known/jwks.json')
-  jwks = json.loads(jsonurl.read())
+  try:
+    jsonurl = urlopen(f'https://{AUTH0_DOMAIN}/.well-known/jwks.json')
+    jwks = json.loads(jsonurl.read())
+  except URLError as e:
+    print(e)
+    raise AuthError({
+      'code': 'invalid_header',
+      'description': 'Authorization malformed.'
+    }, 401)
+
   unverified_header = jwt.get_unverified_header(token)
   rsa_key = {}
   if 'kid' not in unverified_header:

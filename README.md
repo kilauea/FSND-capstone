@@ -14,4 +14,6 @@ brew services stop postgresql
 dropdb calendarapp && createdb calendarapp
 rm -rf migrations
 flask db init
+flask db migrate -m "Initial migration."
+flask db upgrade
 ```
