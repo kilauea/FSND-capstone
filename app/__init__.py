@@ -56,7 +56,7 @@ def create_app(config='config'):
     else:
         database_path = None
     setup_db(app, database_path)
-    CORS(app)#, resources={r"/calendar/*": {"origins": "*"}})
+    CORS(app)
 
     # Import a module / component using its blueprint handler variable (mod_auth)
     from app.mod_auth.controllers import mod_auth as auth_module
