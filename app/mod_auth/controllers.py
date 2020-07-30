@@ -42,11 +42,13 @@ auth0 = oauth.register(
     access_token_url=AUTH0_BASE_URL + '/oauth/token',
     authorize_url=AUTH0_BASE_URL + '/authorize',
     client_kwargs={
-    #    'scope': 'openid profile email get:calendars get:tasks'
-    #}
         'scope': 'openid profile email',
     },
 )
+
+@mod_auth.errorhandler(500)
+def server_error(error):
+    return render_template('errors/500.html', error_msg=error), 500
 
 # Controllers API
 @mod_auth.route('/callback/')
@@ -79,6 +81,7 @@ def callback_handling():
     except:
         session.clear()
         print("Unexpected error:", sys.exc_info()[0])
+        return server_error('Error loggin in')
     return redirect('/calendar')
 
 @mod_auth.route('/login')
